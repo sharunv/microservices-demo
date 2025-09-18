@@ -31,8 +31,11 @@ pipeline {
         stage('Build & Push Users Service') {
             steps {
                 sh '''
-                docker build -t gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG ./users-service
-                docker push gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG
+               
+                sudo docker build -t gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG ./users-service
+                sudo docker push gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG
+                
+
                 '''
             }
         }
@@ -40,8 +43,9 @@ pipeline {
         stage('Build & Push Orders Service') {
             steps {
                 sh '''
-                docker build -t gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG ./orders-service
-                docker push gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG
+               
+                sudo docker build -t gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG ./orders-service
+                sudo docker push gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG
                 '''
             }
         }
