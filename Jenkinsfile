@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_ID     = 'your-gcp-project-id'
-        CLUSTER_NAME   = 'your-gke-cluster'
+        PROJECT_ID     = 'project-gcp-468607'
+        CLUSTER_NAME   = 'velath'
         CLUSTER_REGION = 'us-central1'
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://your-repo-url.git'
+                git branch: 'main', url: 'https://github.com/sharunv/microservices-demo.git'
             }
         }
 
