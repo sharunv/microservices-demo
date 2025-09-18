@@ -4,66 +4,98 @@ trigger:
       - main
 
 variables:
-  PROJECT_ID: your-gcp-project
-  CLUSTER_NAME: your-gke-cluster
-  CLUSTER_REGION: your-region
+  PROJECT_ID: project-gcp-468607
+  CLUSTER_NAME: velath
+  CLUSTER_REGION: us-central1
+  REPO_LOCATION: us-central1
+  REPO_NAME: microservices-repo
   IMAGE_TAG: $(Build.BuildId)
 
 stages:
   - stage: Build
+    displayName: Build & Push Images
     jobs:
       - job: BuildAndPush
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: 'ubuntu-latest'
         steps:
+          - task: Bash@3
+            displayName: 'Install gcloud CLI'
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -e
+                # non-interactive apt install of google-cloud-sdk
+                sudo apt-get update
+                sudo apt-get install -y apt-transport-https ca-certificates gnupg curl
+                echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | \
+                  sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+                curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+                sudo apt-get update && sudo apt-get install -y google-cloud-sdk
+
+          - task: Bash@3
+            displayName: 'Decode SA key and authenticate'
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -e
+                # decode base64 secret into file
+                echo "$(GCP_SA_KEY_BASE64)" | base64 -d > gcp-key.json
+                gcloud auth activate-service-account --key-file=gcp-key.json --project=${PROJECT_ID}
+
+                # configure docker auth for artifact registry
+                gcloud auth configure-docker ${REPO_LOCATION}-docker.pkg.dev --quiet
+
           - task: Docker@2
-            displayName: Build and Push users-service
+            displayName: 'Build and Push users-service'
             inputs:
               command: buildAndPush
-              repository: gcr.io/$(PROJECT_ID)/users-service
+              repository: $(REPO_LOCATION)-docker.pkg.dev/$(PROJECT_ID)/$(REPO_NAME)/users-service
+              dockerfile: users-service/Dockerfile
               tags: |
                 $(IMAGE_TAG)
-              Dockerfile: users-service/Dockerfile
               buildContext: users-service
 
           - task: Docker@2
-            displayName: Build and Push orders-service
+            displayName: 'Build and Push orders-service'
             inputs:
               command: buildAndPush
-              repository: gcr.io/$(PROJECT_ID)/orders-service
+              repository: $(REPO_LOCATION)-docker.pkg.dev/$(PROJECT_ID)/$(REPO_NAME)/orders-service
+              dockerfile: orders-service/Dockerfile
               tags: |
                 $(IMAGE_TAG)
-              Dockerfile: orders-service/Dockerfile
               buildContext: orders-service
 
   - stage: Deploy
+    displayName: Deploy to GKE (Helm)
     dependsOn: Build
     jobs:
       - job: DeployToGKE
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: 'ubuntu-latest'
         steps:
           - task: HelmInstaller@1
             inputs:
-              helmVersionToInstall: "latest"
+              helmVersionToInstall: 'latest'
 
           - task: Bash@3
-            displayName: Authenticate GKE
+            displayName: 'Authenticate gcloud and set kube context'
             inputs:
-              targetType: "inline"
+              targetType: 'inline'
               script: |
-                echo $GOOGLE_APPLICATION_CREDENTIALS_CONTENT > gcp-key.json
-                gcloud auth activate-service-account --key-file=gcp-key.json
-                gcloud container clusters get-credentials $(CLUSTER_NAME) --region $(CLUSTER_REGION) --project $(PROJECT_ID)
+                set -e
+                echo "$(GCP_SA_KEY_BASE64)" | base64 -d > gcp-key.json
+                gcloud auth activate-service-account --key-file=gcp-key.json --project=${PROJECT_ID}
+                # Ensure plugin usage if needed (K8s auth plugin)
+                export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+                gcloud container clusters get-credentials ${CLUSTER_NAME} --region ${CLUSTER_REGION} --project ${PROJECT_ID}
 
-          - task: HelmDeploy@0
-            displayName: Deploy Helm Chart
+          - task: Bash@3
+            displayName: 'Helm upgrade/install'
             inputs:
-              connectionType: None
-              command: upgrade
-              chartType: FilePath
-              chartPath: helm/microservices
-              releaseName: microservices-demo
-              install: true
-              arguments: |
-                --set usersService.image=gcr.io/$(PROJECT_ID)/users-service:$(IMAGE_TAG)                 --set ordersService.image=gcr.io/$(PROJECT_ID)/orders-service:$(IMAGE_TAG)
+              targetType: 'inline'
+              script: |
+                set -e
+                helm upgrade --install microservices-demo helm/microservices \
+                  --set usersService.image=${REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/users-service:$(IMAGE_TAG) \
+                  --set ordersService.image=${REPO_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/orders-service:$(IMAGE_TAG)
