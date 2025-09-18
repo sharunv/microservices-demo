@@ -34,7 +34,7 @@ pipeline {
                 echo "Building & pushing Users Service with Cloud Build..."
                 gcloud builds submit ./users-service \
                 --tag us-central1-docker.pkg.dev/project-gcp-468607/microrepo/users-service:${BUILD_TAG}
-                --no-source
+                --async
 
                 '''
             }
@@ -46,7 +46,7 @@ pipeline {
                 echo "Building & pushing orders Service with Cloud Build..."
                 gcloud builds submit ./orders-service \
                 --tag us-central1-docker.pkg.dev/project-gcp-468607/microrepo/orders-service:${BUILD_TAG}
-                --no-source
+                --async
             
                 '''
             }
