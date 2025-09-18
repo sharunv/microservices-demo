@@ -1,0 +1,21 @@
+usersService:
+  image: users-service:latest
+  replicas: 2
+  port: 4000
+
+ordersService:
+  image: orders-service:latest
+  replicas: 2
+  port: 5000
+
+ingress:
+  enabled: true
+  className: "gce"
+  hosts:
+    - paths:
+        - path: /users
+          service: users-service
+          port: 4000
+        - path: /orders
+          service: orders-service
+          port: 5000

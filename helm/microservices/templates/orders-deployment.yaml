@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+spec:
+  replicas: {{ .Values.ordersService.replicas }}
+  selector:
+    matchLabels:
+      app: orders-service
+  template:
+    metadata:
+      labels:
+        app: orders-service
+    spec:
+      containers:
+        - name: orders-service
+          image: {{ .Values.ordersService.image }}
+          ports:
+            - containerPort: {{ .Values.ordersService.port }}
+          env:
+            - name: USERS_SERVICE_URL
+              value: "http://users-service:{{ .Values.usersService.port }}"
