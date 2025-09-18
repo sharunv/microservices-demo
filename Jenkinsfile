@@ -32,8 +32,9 @@ pipeline {
             steps {
                 sh '''
                
-                sudo docker build -t gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG ./users-service
-                sudo docker push gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG
+            
+                docker build -t us-central1-docker.pkg.dev/$PROJECT_NAME/microrepo/users-service:${BUILD_TAG}
+                docker push us-central1-docker.pkg.dev/$PROJECT_NAME/microrepo/users-service:${BUILD_TAG}
                 
 
                 '''
@@ -43,9 +44,9 @@ pipeline {
         stage('Build & Push Orders Service') {
             steps {
                 sh '''
-               
-                sudo docker build -t gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG ./orders-service
-                sudo docker push gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG
+                docker build -t us-central1-docker.pkg.dev/$PROJECT_NAME/microrepo/orders-service:${BUILD_TAG}
+                docker push us-central1-docker.pkg.dev/$PROJECT_NAME/microrepo/orders-service:${BUILD_TAG}
+            
                 '''
             }
         }
