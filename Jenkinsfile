@@ -4,7 +4,7 @@ pipeline {
     environment {
         PROJECT_ID     = 'project-gcp-468607'
         CLUSTER_NAME   = 'velath'
-        CLUSTER_REGION = 'us-central1'
+        CLUSTER_REGION = 'us-central1-a'
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
     }
@@ -22,7 +22,8 @@ pipeline {
                 echo "Authenticating with GCP..."
                 gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
                 gcloud config set project $PROJECT_ID
-                gcloud container clusters get-credentials $CLUSTER_NAME --region $CLUSTER_REGION --project $PROJECT_ID
+                gcloud container clusters get-credentials $CLUSTER_NAME --zone us-central1-a --project project-gcp-468607
+                
                 '''
             }
         }
