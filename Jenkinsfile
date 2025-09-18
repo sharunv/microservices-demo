@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        PROJECT_ID     = 'your-gcp-project-id'
+        CLUSTER_NAME   = 'your-gke-cluster'
+        CLUSTER_REGION = 'us-central1'
+        IMAGE_TAG      = "${env.BUILD_NUMBER}"
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://your-repo-url.git'
+            }
+        }
+
+        stage('Auth GCP') {
+            steps {
+                sh '''
+                echo "Authenticating with GCP..."
+                gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                gcloud config set project $PROJECT_ID
+                gcloud container clusters get-credentials $CLUSTER_NAME --region $CLUSTER_REGION --project $PROJECT_ID
+                '''
+            }
+        }
+
+        stage('Build & Push Users Service') {
+            steps {
+                sh '''
+                docker build -t gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG ./users-service
+                docker push gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Build & Push Orders Service') {
+            steps {
+                sh '''
+                docker build -t gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG ./orders-service
+                docker push gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Deploy with Helm') {
+            steps {
+                sh '''
+                cd helm/microservices
+                helm upgrade --install microservices-demo . \
+                    --set usersService.image=gcr.io/$PROJECT_ID/users-service:$IMAGE_TAG \
+                    --set ordersService.image=gcr.io/$PROJECT_ID/orders-service:$IMAGE_TAG
+                '''
+            }
+        }
+    }
+}
