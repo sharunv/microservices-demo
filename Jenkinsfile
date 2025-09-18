@@ -31,8 +31,8 @@ pipeline {
         stage('Build & Push Users Service') {
             steps {
                 sh '''                     
-                docker build -t us-central1-docker.pkg.dev/project-gcp-468607/microrepo/users-service:${BUILD_TAG} ./users-service
-                docker push us-central1-docker.pkg.dev/project-gcp-468607/microrepo/users-service:${BUILD_TAG}
+                sudo docker build -t us-central1-docker.pkg.dev/project-gcp-468607/microrepo/users-service:${BUILD_TAG} ./users-service
+                sudo docker push us-central1-docker.pkg.dev/project-gcp-468607/microrepo/users-service:${BUILD_TAG}
 
                 '''
             }
@@ -41,8 +41,8 @@ pipeline {
         stage('Build & Push Orders Service') {
             steps {
                 sh '''
-                docker build -t us-central1-docker.pkg.dev/project-gcp-468607/microrepo/orders-service:${BUILD_TAG} ./orders-service
-                docker push us-central1-docker.pkg.dev/project-gcp-468607/microrepo/orders-service:${BUILD_TAG}
+                sudo docker build -t us-central1-docker.pkg.dev/project-gcp-468607/microrepo/orders-service:${BUILD_TAG} ./orders-service
+                sudo docker push us-central1-docker.pkg.dev/project-gcp-468607/microrepo/orders-service:${BUILD_TAG}
             
                 '''
             }
