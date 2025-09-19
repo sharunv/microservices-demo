@@ -18,7 +18,7 @@ pipeline {
 
         stage('Auth GCP & Build & Push Docker Image') {
             steps {
-                withCredentials([file(credentialsId: 'GCP_KEY', variable: 'GCP_KEY')]) {
+                withCredentials([file(credentialsId: 'GCP_KEY', variable: 'GCP_KEY')]) 
                      sh '''
                      echo "Authenticating with GCP..."
                      gcloud auth activate-service-account --key-file=$GCP_KEY
@@ -29,7 +29,7 @@ pipeline {
                      docker tag $IMAGE_URL $IMAGE_URL:latest
                      docker push $IMAGE_URL:latest
                      
-                }   '''
+                   '''
             }
         }
 
@@ -68,4 +68,5 @@ pipeline {
             }
         }
     }
+
 }
