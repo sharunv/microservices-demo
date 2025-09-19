@@ -1,7 +1,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+
+# If package-lock.json exists, run npm ci; otherwise, fallback to npm install
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+
 COPY . .
 RUN npm run build
 
@@ -15,3 +19,6 @@ RUN addgroup -S nodejs && adduser -S nodejs -G nodejs
 USER nodejs
 EXPOSE 4000
 CMD ["node", "dist/index.js"]
+
+
+
