@@ -21,7 +21,7 @@ pipeline {
                 withCredentials([file(credentialsId: 'GCP_KEY', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                      sh '''
                      echo "Authenticating with GCP..."
-                     gcloud auth activate-service-account --key-file=$GCP_KEY
+                     gcloud auth activate-service-account --key-file=gcpkey.json
                      gcloud config set project $PROJECT_ID
                      gcloud auth configure-docker --quiet
                      IMAGE_URL=gcr.io/$PROJECT_ID/microrepo:$BUILD_NUMBER
