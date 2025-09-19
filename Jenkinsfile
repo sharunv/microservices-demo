@@ -6,7 +6,7 @@ pipeline {
         CLUSTER_NAME   = 'velath'
         CLUSTER_REGION = 'us-central1-a'
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('GCP_KEY')
+        CREDENTIAL_ID = 'GCP_KEY'
     }
 
     stages {
@@ -18,7 +18,7 @@ pipeline {
 
         stage('Auth GCP & Build & Push Docker Image') {
             steps {
-                withCredentials([file(credentialsId: 'GCP_KEY', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: ${CREDENTIAL_ID}, variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                      sh '''
                      echo "Authenticating with GCP..."
                      gcloud auth activate-service-account --key-file=gcpkey.json
