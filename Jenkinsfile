@@ -6,7 +6,7 @@ pipeline {
         CLUSTER_NAME   = 'velath'
         CLUSTER_REGION = 'us-central1-a'
         IMAGE_TAG      = "${env.BUILD_NUMBER}"
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-key')
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('GCP_KEY')
     }
 
     stages {
