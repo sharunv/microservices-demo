@@ -2,8 +2,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 
-# If package-lock.json exists, run npm ci; otherwise, fallback to npm install
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# If package-lock.json exists, run npm ci; other
+RUN npm ci
 
 
 COPY . .
