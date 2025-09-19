@@ -16,15 +16,20 @@ pipeline {
             }
         }
 
-        stage('Auth GCP') {
+        stage('Auth GCP & Build & Push Docker Image') {
             steps {
-                sh '''
-                echo "Authenticating with GCP..."
-                gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                gcloud config set project $PROJECT_ID
-                gcloud container clusters get-credentials $CLUSTER_NAME --zone us-central1-a --project project-gcp-468607
-                
-                '''
+                withCredentials([file(credentialsId: 'GCP_KEY', variable: 'GCP_KEY')]) {
+                     sh '''
+                     echo "Authenticating with GCP..."
+                     gcloud auth activate-service-account --key-file=$GCP_KEY
+                     gcloud config set project $PROJECT_ID
+                     gcloud auth configure-docker --quiet
+                     IMAGE_URL=gcr.io/$PROJECT_ID/microrepo:$BUILD_NUMBER
+                     docker build -t $IMAGE_URL .
+                     docker tag $IMAGE_URL $IMAGE_URL:latest
+                     docker push $IMAGE_URL:latest
+                     
+                }   '''
             }
         }
 
